@@ -49,6 +49,7 @@ describe('subscription renderer', () => {
     expect(outputs.clash).toContain('type: vless');
     expect(outputs.surge).toContain('[Proxy]');
     expect(Buffer.from(outputs.v2rayn, 'base64').toString('utf8')).toContain('vless://');
+    expect(Buffer.from(outputs.shadowrocket, 'base64').toString('utf8')).toContain('vless://');
   });
 
   it('expands vmess nodes', () => {

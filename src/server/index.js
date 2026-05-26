@@ -227,6 +227,7 @@ fastify.post('/api/subscriptions', { preHandler: adminAuth }, async (request, re
       clash: outputs.clash,
       surge: outputs.surge,
       v2rayn: outputs.v2rayn,
+      shadowrocket: outputs.shadowrocket,
       expiresAt: expiresAtFromHours(body.expiresInHours)
     });
 
@@ -238,7 +239,8 @@ fastify.post('/api/subscriptions', { preHandler: adminAuth }, async (request, re
         raw: `${baseUrl}/sub/${id}?target=raw&token=${token}`,
         clash: `${baseUrl}/sub/${id}?target=clash&token=${token}`,
         surge: `${baseUrl}/sub/${id}?target=surge&token=${token}`,
-        v2rayn: `${baseUrl}/sub/${id}?target=v2rayn&token=${token}`
+        v2rayn: `${baseUrl}/sub/${id}?target=v2rayn&token=${token}`,
+        shadowrocket: `${baseUrl}/sub/${id}?target=shadowrocket&token=${token}`
       },
       expiresAt: sub.expires_at,
       subscription: sub
@@ -256,8 +258,8 @@ fastify.get('/sub/:id', async (request, reply) => {
   if (sub.expires_at && Date.parse(sub.expires_at) <= Date.now()) {
     return reply.code(410).send('subscription expired');
   }
-  const target = ['raw', 'clash', 'surge', 'v2rayn'].includes(request.query?.target) ? request.query.target : 'raw';
-  const output = target === 'raw' ? sub.raw_output : target === 'clash' ? sub.clash_output : target === 'surge' ? sub.surge_output : sub.v2rayn_output;
+  const target = ['raw', 'clash', 'surge', 'v2rayn', 'shadowrocket'].includes(request.query?.target) ? request.query.target : 'raw';
+  const output = subscriptionOutputFor(sub, target);
   const contentType = target === 'clash' ? 'text/yaml; charset=utf-8' : 'text/plain; charset=utf-8';
   return reply.header('Content-Type', contentType).send(output);
 });
@@ -308,6 +310,14 @@ function expiresAtFromHours(value) {
   const hours = Number.parseInt(value ?? '24', 10);
   const normalized = Number.isFinite(hours) ? Math.min(168, Math.max(1, hours)) : 24;
   return new Date(Date.now() + normalized * 60 * 60 * 1000).toISOString();
+}
+
+function subscriptionOutputFor(sub, target) {
+  if (target === 'raw') return sub.raw_output;
+  if (target === 'clash') return sub.clash_output;
+  if (target === 'surge') return sub.surge_output;
+  if (target === 'shadowrocket') return sub.shadowrocket_output || sub.v2rayn_output || sub.raw_output;
+  return sub.v2rayn_output;
 }
 
 function addSseClient(jobId, response) {

@@ -23,7 +23,8 @@ export function buildSubscriptionOutputs({ nodeText, preferredAddresses, keepOri
     raw: renderRaw(expanded),
     clash: renderClash(expanded),
     surge: renderSurge(expanded),
-    v2rayn: renderV2rayN(expanded)
+    v2rayn: renderBase64Raw(expanded),
+    shadowrocket: renderBase64Raw(expanded)
   };
 }
 
@@ -132,10 +133,6 @@ function renderRaw(nodes) {
     }
     return node.url.toString();
   }).join('\n');
-}
-
-function renderV2rayN(nodes) {
-  return encodeBase64(renderRaw(nodes));
 }
 
 function renderClash(nodes) {
@@ -271,6 +268,10 @@ function expandPossibleBase64(input) {
 function buildName(prefix, base, target) {
   const label = target.remark || target.host;
   return `${prefix}-${label}-${base}`.replace(/\s+/g, '-');
+}
+
+function renderBase64Raw(nodes) {
+  return encodeBase64(renderRaw(nodes));
 }
 
 function encodeBase64(value) {

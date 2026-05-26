@@ -71,11 +71,13 @@ function migrate(db) {
       clash_output TEXT NOT NULL,
       surge_output TEXT NOT NULL,
       v2rayn_output TEXT NOT NULL DEFAULT '',
+      shadowrocket_output TEXT NOT NULL DEFAULT '',
       expires_at TEXT,
       created_at TEXT NOT NULL
     );
   `);
   ensureColumn(db, 'subscriptions', 'v2rayn_output', "TEXT NOT NULL DEFAULT ''");
+  ensureColumn(db, 'subscriptions', 'shadowrocket_output', "TEXT NOT NULL DEFAULT ''");
   ensureColumn(db, 'subscriptions', 'expires_at', 'TEXT');
 }
 
@@ -193,8 +195,8 @@ function createStore(db) {
       db.prepare(`
         INSERT INTO subscriptions (
           id, token, node_input_summary, preferred_addresses_json, keep_original_host,
-          name_prefix, raw_output, clash_output, surge_output, v2rayn_output, expires_at, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          name_prefix, raw_output, clash_output, surge_output, v2rayn_output, shadowrocket_output, expires_at, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         subscription.id,
         subscription.token,
@@ -206,6 +208,7 @@ function createStore(db) {
         subscription.clash,
         subscription.surge,
         subscription.v2rayn,
+        subscription.shadowrocket,
         subscription.expiresAt,
         now()
       );

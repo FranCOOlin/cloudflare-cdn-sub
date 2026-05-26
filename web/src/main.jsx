@@ -61,6 +61,7 @@ function App() {
   const [message, setMessage] = useState('');
   const [browserTest, setBrowserTest] = useState({ status: 'idle' });
   const eventSource = useRef(null);
+  const messageTimer = useRef(null);
   const isIos = useMemo(() => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), []);
 
   useEffect(() => {
@@ -77,6 +78,10 @@ function App() {
       setSelectedAgent(online.id);
     }
   }, [agents, selectedAgent]);
+
+  useEffect(() => () => {
+    if (messageTimer.current) window.clearTimeout(messageTimer.current);
+  }, []);
 
   async function api(path, options = {}) {
     const response = await fetch(path, {
@@ -220,9 +225,21 @@ function App() {
   }
 
   async function copy(text) {
-    if (!text) return;
-    await navigator.clipboard.writeText(text);
-    setMessage('已复制');
+    if (!text) {
+      setMessage('没有可复制的内容');
+      return;
+    }
+
+    try {
+      await copyToClipboard(text);
+      setMessage('已复制到剪贴板');
+      if (messageTimer.current) window.clearTimeout(messageTimer.current);
+      messageTimer.current = window.setTimeout(() => {
+        setMessage((current) => (current === '已复制到剪贴板' ? '' : current));
+      }, 1800);
+    } catch {
+      setMessage('复制失败：浏览器拒绝写入剪贴板，请手动选择文本复制。');
+    }
   }
 
   async function runBrowserTest() {
@@ -568,7 +585,7 @@ function SubscriptionPanel(props) {
             <div className="links">
               {Object.entries(subscription.urls).map(([name, url]) => (
                 <div className="link-row" key={name}>
-                  <span>{name}</span>
+                  <span>{formatSubscriptionTarget(name)}</span>
                   <code>{url}</code>
                   <button title={`复制 ${name}`} onClick={() => copy(url)}><Copy size={16} /></button>
                 </div>
@@ -577,7 +594,7 @@ function SubscriptionPanel(props) {
               <p>生成节点数：{subscription.nodeCount}</p>
             </div>
           ) : (
-            <div className="empty">生成后这里会显示 Raw、Clash、Surge、v2rayN 四类临时订阅链接。</div>
+            <div className="empty">生成后这里会显示 Raw、Clash、Surge、v2rayN、Shadowrocket 五类临时订阅链接。</div>
           )}
         </Panel>
       </section>
@@ -707,7 +724,7 @@ function TutorialsPanel({ agentToken, baseUrl, copy }) {
             <li>进入“临时订阅”，确认“当前选中优选地址”已显示刚才勾选的 IP。</li>
             <li>粘贴原始节点文本，或填写远程订阅 URL。</li>
             <li>设置名称前缀、有效期、是否保留原始 Host/SNI。</li>
-            <li>点击“生成临时订阅地址”，复制 Raw / Clash / Surge / v2rayN 链接到客户端。</li>
+            <li>点击“生成临时订阅地址”，复制 Raw / Clash / Surge / v2rayN / Shadowrocket 链接到客户端。</li>
           </ol>
         </Panel>
 
@@ -819,9 +836,76 @@ function average(values) {
   return clean.reduce((sum, value) => sum + value, 0) / clean.length;
 }
 
+async function copyToClipboard(text) {
+  const value = String(text);
+  if (window.isSecureContext && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // HTTP LAN pages and permission-blocked browsers fall back to the legacy path.
+    }
+  }
+
+  if (legacyCopyToClipboard(value)) return;
+  throw new Error('clipboard unavailable');
+}
+
+function legacyCopyToClipboard(text) {
+  if (!document.body) return false;
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '-9999px';
+  textarea.style.width = '1px';
+  textarea.style.height = '1px';
+  textarea.style.opacity = '0';
+  textarea.style.fontSize = '16px';
+
+  const selection = document.getSelection();
+  const selectedRange = selection?.rangeCount ? selection.getRangeAt(0) : null;
+
+  document.body.appendChild(textarea);
+  try {
+    textarea.focus({ preventScroll: true });
+  } catch {
+    textarea.focus();
+  }
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } catch {
+    copied = false;
+  }
+
+  document.body.removeChild(textarea);
+  if (selectedRange && selection) {
+    selection.removeAllRanges();
+    selection.addRange(selectedRange);
+  }
+  return copied;
+}
+
 function formatNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number.toFixed(2) : '-';
+}
+
+function formatSubscriptionTarget(name) {
+  const labels = {
+    raw: 'Raw',
+    clash: 'Clash',
+    surge: 'Surge',
+    v2rayn: 'v2rayN',
+    shadowrocket: 'Shadowrocket'
+  };
+  return labels[name] || name;
 }
 
 function formatBytes(bytes) {

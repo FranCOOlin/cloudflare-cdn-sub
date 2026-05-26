@@ -19,7 +19,7 @@ _一个本地部署的 Cloudflare 优选 IP 测速与临时订阅生成器_
   <img alt="frontend React" src="https://img.shields.io/badge/frontend-React%2019-61dafb?style=flat-square&logo=react&logoColor=111111">
   <img alt="server Fastify" src="https://img.shields.io/badge/server-Fastify-111111?style=flat-square&logo=fastify&logoColor=white">
   <img alt="database SQLite" src="https://img.shields.io/badge/database-SQLite-3f88c5?style=flat-square&logo=sqlite&logoColor=white">
-  <img alt="subscription formats" src="https://img.shields.io/badge/sub-Raw%20%7C%20Clash%20%7C%20Surge%20%7C%20v2rayN-8b5cf6?style=flat-square">
+  <img alt="subscription formats" src="https://img.shields.io/badge/sub-Raw%20%7C%20Clash%20%7C%20Surge%20%7C%20v2rayN%20%7C%20Shadowrocket-8b5cf6?style=flat-square">
 </p>
 
 <p>
@@ -41,7 +41,7 @@ _一个本地部署的 Cloudflare 优选 IP 测速与临时订阅生成器_
 - 在目标设备上真实运行 CFST，得到该设备网络出口到 Cloudflare CDN 的优选 IP。
 - 在 iOS 或临时设备上做无安装浏览器测速，用来判断当前访问体验。
 - 把优选 IP 写入已有 `vmess`、`vless`、`trojan` 节点，生成临时订阅链接。
-- 输出 Raw、Clash、Surge、v2rayN 四种格式，方便直接导入客户端。
+- 输出 Raw、Clash、Surge、v2rayN、Shadowrocket 五种格式，方便直接导入客户端。
 
 > 注意：浏览器无 Agent 测速不能生成可靠优选 IP。需要自动优选 IP 时，请在目标设备运行 Agent，或手动填写已有优选地址。
 
@@ -52,7 +52,7 @@ _一个本地部署的 Cloudflare 优选 IP 测速与临时订阅生成器_
 - **无 Agent 模式**：当前浏览器直接访问 Cloudflare Speed Test 端点，适合 iOS、访客设备和临时排查。
 - **CFST 参数可调**：支持 IPv4/IPv6、端口、延迟线程、下载数量、下载时长、测速 URL。
 - **临时订阅**：订阅链接默认 24 小时过期，可在页面调整为 1-168 小时。
-- **多格式输出**：Raw、Clash、Surge、v2rayN。
+- **多格式输出**：Raw、Clash、Surge、v2rayN、Shadowrocket。
 - **Token 鉴权**：管理 Token、Agent Token、订阅 Token 分离，适合可信局域网使用。
 - **PWA 支持**：手机浏览器可添加到主屏幕，作为本地控制台使用。
 
@@ -65,7 +65,7 @@ flowchart LR
   Agent["目标设备 Agent"] --> CFST["CloudflareSpeedTest"]
   CFST --> Agent
   Agent --> Server
-  Server --> Sub["临时订阅链接<br>Raw / Clash / Surge / v2rayN"]
+  Server --> Sub["临时订阅链接<br>Raw / Clash / Surge / v2rayN / Shadowrocket"]
   Browser -. 无 Agent 近似测速 .-> CF["Cloudflare Speed Test"]
 ```
 
@@ -121,7 +121,7 @@ Agent 命令里的服务端地址不是写死的。页面会使用你当前访�
 6. 粘贴原始节点文本，或填写远程订阅 URL。
 7. 设置名称前缀、有效期、是否保留原始 Host/SNI。
 8. 点击「生成临时订阅地址」。
-9. 复制 Raw / Clash / Surge / v2rayN 链接到客户端。
+9. 复制 Raw / Clash / Surge / v2rayN / Shadowrocket 链接到客户端。
 
 服务端会把原始节点中的 `server` 地址替换为选中的优选 IP。如果开启「保留原始 Host/SNI」，原节点域名会写入 `host` / `sni`，用于保持 TLS 和 WebSocket 参数。
 
@@ -254,7 +254,7 @@ CFST_VERSION=v2.3.5
 | `GET` | `/api/speedtests/:id/events` | 读取测速日志和状态事件 |
 | `GET` | `/api/speedtests/:id` | 查看测速结果 |
 | `POST` | `/api/subscriptions` | 生成临时订阅 |
-| `GET` | `/sub/:id?target=raw\|clash\|surge\|v2rayn&token=...` | 拉取订阅内容 |
+| `GET` | `/sub/:id?target=raw\|clash\|surge\|v2rayn\|shadowrocket&token=...` | 拉取订阅内容 |
 
 ## Badge 按钮怎么做
 
