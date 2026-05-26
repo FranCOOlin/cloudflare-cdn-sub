@@ -1,0 +1,10 @@
+{
+  "name": "Cloudflare CDN 设备测速订阅",
+  "short_name": "CFST Sub",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#f4f6f8",
+  "description": "本地局域网 Cloudflare CDN 设备测速和订阅生成控制台。"
+}
